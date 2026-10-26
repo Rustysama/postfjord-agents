@@ -6,6 +6,10 @@
   "bin": {
     "postfjord-mcp": "server.mjs"
   },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node test.mjs"
+  },
   "files": [
     "server.mjs"
   ],
