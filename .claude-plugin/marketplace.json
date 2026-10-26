@@ -1,0 +1,19 @@
+{
+  "name": "postfjord",
+  "owner": {
+    "name": "Postfjord",
+    "url": "https://postfjord.com"
+  },
+  "metadata": {
+    "description": "Postfjord for AI agents: the skill and the hosted MCP server."
+  },
+  "plugins": [
+    {
+      "name": "postfjord",
+      "source": "./plugin",
+      "description": "Plan, schedule and publish social posts, emails and DM replies through Postfjord.",
+      "version": "1.0.0",
+      "category": "productivity"
+    }
+  ]
+}

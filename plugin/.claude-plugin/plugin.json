@@ -1,0 +1,25 @@
+{
+  "name": "postfjord",
+  "version": "1.0.0",
+  "description": "Plan, schedule and publish social posts, emails and DM replies through Postfjord from any AI agent: the postfjord skill plus the hosted MCP server.",
+  "author": {
+    "name": "Postfjord",
+    "url": "https://postfjord.com"
+  },
+  "homepage": "https://postfjord.com/help/mcp",
+  "repository": "https://github.com/Rustysama/postfjord-agents",
+  "license": "MIT",
+  "keywords": [
+    "postfjord",
+    "social-media",
+    "scheduling",
+    "email",
+    "mcp"
+  ],
+  "displayName": "Postfjord",
+  "icon": ".claude-plugin/icon.png",
+  "privacyPolicyUrl": "https://postfjord.com/privacy",
+  "supportUrl": "https://postfjord.com/contact",
+  "documentationUrl": "https://postfjord.com/help/mcp",
+  "termsOfServiceUrl": "https://postfjord.com/terms"
+}
