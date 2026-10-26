@@ -7,6 +7,7 @@ Official agent tooling for [Postfjord](https://postfjord.com), the marketing wor
 | `plugin/` | Claude Code plugin: the skill plus the hosted MCP server |
 | `skills/postfjord/` | The postfjord Agent Skill, for any agent that reads skills |
 | `skills/postfjord/references/tools.md` | Every tool, what it does and what it reaches, generated from the server's own definitions |
+| `mcp/` | The same tools as a local MCP server (stdio), for apps that run servers themselves, with a `Dockerfile` |
 
 ## Connect
 
@@ -32,6 +33,15 @@ claude plugin install postfjord@postfjord
 ```
 
 **Codex, Cursor, VS Code, Grok Bot, Hermes Agent and other apps**: step by step instructions for each are at [postfjord.com/help/mcp](https://postfjord.com/help/mcp). Apps that cannot open a browser take a key from Postfjord, Settings, Apps, sent as `Authorization: Bearer pf_live_...`.
+
+**Local server** (stdio), for apps that start MCP servers themselves. It takes a key from Postfjord, Settings, Apps, and reads pictures and videos from your own disk for `postfjord_upload_media`:
+
+```
+cd mcp && npm install
+claude mcp add postfjord -e POSTFJORD_API_KEY=pf_live_... -- node /path/to/postfjord-agents/mcp/server.mjs
+```
+
+Or in a container: `docker build -t postfjord-mcp .` and `docker run -i --rm -e POSTFJORD_API_KEY=pf_live_... postfjord-mcp`.
 
 **Skill only**, for agents that read skills: copy `skills/postfjord` into your agent's skills folder, or run `npx skills add Rustysama/postfjord-agents`.
 

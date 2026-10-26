@@ -1,0 +1,26 @@
+{
+  "name": "postfjord-mcp",
+  "version": "1.0.0",
+  "description": "Postfjord MCP server (stdio): plan, write and schedule social posts, emails and DM replies in a Postfjord workspace with an API key. Most people use the hosted server at https://mcp.postfjord.com/mcp instead.",
+  "type": "module",
+  "bin": {
+    "postfjord-mcp": "server.mjs"
+  },
+  "files": [
+    "server.mjs"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "homepage": "https://postfjord.com/help/mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Rustysama/postfjord-agents.git",
+    "directory": "mcp"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.5.4"
+  }
+}
