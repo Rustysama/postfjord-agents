@@ -1899,9 +1899,10 @@ const PLATFORM_LIVE = {
 	sell: "testers",
 	livedictation: false,
 	reelsmusic: "testers",
-	wordpress: "testers",
+	wordpress: true,
 	ghost: "testers",
-	wix: "testers"
+	wix: "testers",
+	tumblr: false
 };
 Object.freeze([
 	true,
@@ -1928,7 +1929,8 @@ Object.freeze([
 	"tiktokads",
 	"aivideo",
 	"sell",
-	"wix"
+	"wix",
+	"tumblr"
 ]);
 Object.freeze([
 	"youtube",
