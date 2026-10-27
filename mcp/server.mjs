@@ -1900,8 +1900,8 @@ const PLATFORM_LIVE = {
 	livedictation: false,
 	reelsmusic: "testers",
 	wordpress: true,
-	ghost: "testers",
-	wix: "testers",
+	ghost: true,
+	wix: true,
 	tumblr: "testers",
 	shopifyblog: "testers"
 };
