@@ -1902,7 +1902,7 @@ const PLATFORM_LIVE = {
 	wordpress: true,
 	ghost: true,
 	wix: true,
-	tumblr: "testers",
+	tumblr: true,
 	shopifyblog: "testers"
 };
 Object.freeze([
