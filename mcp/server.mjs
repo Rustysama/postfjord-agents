@@ -1581,10 +1581,11 @@ const fitTargetSchema = z.object({
 * admin only (the remote endpoint checks; the REST route checks again), so no customer's app ever
 * sees it.
 */
-function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile = null, mentions = false, goals = false, contacts = false, workspaces = null } = {}) {
+function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile = null, mentions = false, goals = false, contacts = false, workspaces = null, team = false } = {}) {
 	if (workspaces) registerWorkspaceTools(mcpServer, api, { run });
 	const server = workspaces ? withWorkspaceArg(mcpServer, workspaces.within) : mcpServer;
 	if (admin);
+	if (team);
 	server.registerTool("postfjord_list_channels", {
 		title: "List channels",
 		annotations: {
@@ -2022,7 +2023,8 @@ const PLATFORM_LIVE = {
 	ghost: true,
 	wix: true,
 	tumblr: true,
-	shopifyblog: true
+	shopifyblog: true,
+	team: "testers"
 };
 Object.freeze([
 	true,
@@ -2098,7 +2100,8 @@ Object.freeze([
 	"ghost",
 	"wix",
 	"tumblr",
-	"shopifyblog"
+	"shopifyblog",
+	"team"
 ]);
 let activeLive = PLATFORM_LIVE;
 const mapOf = (live) => live && typeof live === "object" && typeof live.then !== "function" ? live : activeLive;
