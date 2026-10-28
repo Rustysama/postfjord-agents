@@ -1431,6 +1431,17 @@ const run = (fn) => async (args) => {
 };
 const postIdSchema = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/, "A post id has letters, digits, - and _ only.");
 const p = (postId) => `/posts/${encodeURIComponent(postId)}`;
+const STATS_DAYS = [
+	7,
+	30,
+	90,
+	365
+];
+function nearestStatsDays(days) {
+	const n = Number(days);
+	if (days == null || days === "" || !Number.isFinite(n) || n <= 0) return void 0;
+	return STATS_DAYS.reduce((best, r) => Math.abs(r - n) < Math.abs(best - n) ? r : best);
+}
 const FIT_ASPECT_NAMES = [
 	"auto",
 	"original",
@@ -1790,13 +1801,11 @@ function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile
 			openWorldHint: false
 		},
 		description: "How the workspace is doing, the numbers the Analytics screen shows: per channel followers and change, posts, likes and comments, per post and as a rate of followers, reach where the platform shares it; the top posts across channels with their text and link; and the best weekday and hour to post (in the workspace time zone, measured against each channel's usual). days is 7, 30, 90 or 365 (default 30), cut to what the plan keeps. Read notes for what is missing and why. Use it to answer what performed and to plan posts like the ones that did.",
-		inputSchema: { days: z.union([
-			z.literal(7),
-			z.literal(30),
-			z.literal(90),
-			z.literal(365)
-		]).optional() }
-	}, run((a) => api("GET", "/analytics", void 0, a.days ? { days: a.days } : void 0)));
+		inputSchema: { days: z.union([z.number(), z.string()]).optional() }
+	}, run((a) => {
+		const days = nearestStatsDays(a.days);
+		return api("GET", "/analytics", void 0, days ? { days } : void 0);
+	}));
 	server.registerTool("postfjord_get_weekly_signals", {
 		title: "Get weekly signals",
 		annotations: {
