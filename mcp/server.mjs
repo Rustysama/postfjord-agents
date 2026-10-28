@@ -85,6 +85,92 @@ async function uploadFile(path, { name, alt, headers } = {}) {
 	return data;
 }
 //#endregion
+//#region mcp/toolsOutput.js
+const asObject$2 = (data) => Array.isArray(data) ? { items: data } : data !== null && typeof data === "object" ? data : { result: data ?? null };
+const fail$3 = (err) => ({
+	isError: true,
+	content: [{
+		type: "text",
+		text: err && err.status && err.code ? `${err.code}: ${err.message}` : String(err && err.message || err)
+	}]
+});
+const typed = (fn) => async (args) => {
+	try {
+		const data = asObject$2(await fn(args || {}));
+		return {
+			content: [{
+				type: "text",
+				text: JSON.stringify(data, null, 2)
+			}],
+			structuredContent: data
+		};
+	} catch (err) {
+		return fail$3(err);
+	}
+};
+const looseOut = (shape) => z.looseObject(shape);
+const idRow = (shape = {}) => z.looseObject({
+	id: z.string().nullable().optional(),
+	...shape
+});
+const cursor = z.string().nullable().optional().describe("Pass back as cursor for the next page; null when there are no more.");
+const OUTPUT = {
+	channels: looseOut({ items: z.array(idRow({
+		platform: z.string().nullable().optional(),
+		name: z.string().nullable().optional(),
+		status: z.string().nullable().optional()
+	})).optional().describe("The connected channels.") }),
+	brand: looseOut({ strategy: z.looseObject({}).nullable().optional().describe("The content strategy, null when there is none.") }),
+	calendar: looseOut({
+		items: z.array(idRow({
+			status: z.string().nullable().optional(),
+			baseText: z.string().nullable().optional()
+		})).optional().describe("The posts."),
+		notes: z.array(idRow()).nullable().optional().describe("Calendar notes on the days asked for, when from and to are both days.")
+	}),
+	post: idRow({
+		status: z.string().nullable().optional(),
+		baseText: z.string().nullable().optional(),
+		targets: z.looseObject({}).optional().describe("Per channel id: its text, status, permalink and error.")
+	}),
+	mediaList: looseOut({ items: z.array(idRow({
+		kind: z.string().nullable().optional(),
+		status: z.string().nullable().optional(),
+		name: z.string().nullable().optional()
+	})).optional().describe("The files, newest first.") }),
+	media: idRow({
+		kind: z.string().nullable().optional(),
+		status: z.string().nullable().optional(),
+		name: z.string().nullable().optional()
+	}),
+	analytics: looseOut({
+		days: z.number().nullable().optional(),
+		channels: z.array(z.looseObject({
+			channelId: z.string().nullable().optional(),
+			platform: z.string().nullable().optional()
+		})).optional(),
+		totals: z.looseObject({}).optional(),
+		topPosts: z.array(z.looseObject({})).optional(),
+		notes: z.array(z.string()).nullable().optional()
+	}),
+	contacts: looseOut({
+		items: z.array(idRow({ email: z.string().nullable().optional() })).optional().describe("The contacts."),
+		nextCursor: cursor
+	}),
+	campaigns: looseOut({
+		items: z.array(idRow({
+			name: z.string().nullable().optional(),
+			kind: z.string().nullable().optional(),
+			status: z.string().nullable().optional()
+		})).optional().describe("The emails."),
+		nextCursor: cursor
+	}),
+	conversations: looseOut({
+		conversations: z.array(idRow()).optional().describe("The conversations, newest first."),
+		nextCursor: cursor
+	})
+};
+//#endregion
 //#region mcp/toolsIdempotency.js
 /** One line for each tool's description. */
 const RETRY_HINT = "On a retry after a timeout or error, send the same idempotency_key: the first answer comes back and nothing is made or sent twice.";
@@ -269,8 +355,9 @@ function registerMailTools(server, api) {
 			consent: z.enum(["confirmed", "pending"]).optional().describe("Default confirmed."),
 			limit: z.number().int().min(1).max(50).optional().describe("Default 25."),
 			cursor: idSchema.optional().describe("nextCursor from the page before.")
-		}
-	}, run$2((a) => api("GET", "/mail/contacts", null, a)));
+		},
+		outputSchema: OUTPUT.contacts
+	}, typed((a) => api("GET", "/mail/contacts", null, a)));
 	server.registerTool("postfjord_list_campaigns", {
 		title: "List email campaigns",
 		annotations: {
@@ -289,12 +376,13 @@ function registerMailTools(server, api) {
 				"sent",
 				"cancelled",
 				"failed"
-			]).optional(),
-			kind: z.enum(["campaign", "automation"]).optional(),
+			]).optional().describe("Only emails in this state."),
+			kind: z.enum(["campaign", "automation"]).optional().describe("campaign: one email to the list. automation: an email in a series."),
 			limit: z.number().int().min(1).max(50).optional().describe("Default 20."),
 			cursor: idSchema.optional().describe("nextCursor from the page before.")
-		}
-	}, run$2((a) => api("GET", "/mail/campaigns", null, a)));
+		},
+		outputSchema: OUTPUT.campaigns
+	}, typed((a) => api("GET", "/mail/campaigns", null, a)));
 	server.registerTool("postfjord_get_campaign", {
 		title: "Get email campaign",
 		annotations: {
@@ -324,7 +412,7 @@ function registerMailTools(server, api) {
 		description: "For one email to the list; a series that starts by itself for each new contact is postfjord_create_email_automation. Creates a new email as a draft, in the workspace's brand colors with its logo on top. Nothing is sent. It can carry who it goes to: tags (contacts with any of these tag names, matched without caring about capitals) or a segment (a saved segment's name or id); without either it goes to everyone who said yes. The answer then says how many confirmed contacts it reaches. Either write it yourself with subject, preheader and blocks (read postfjord_get_brand_profile first and follow its writing rules), or give a brief and Postfjord's own AI drafts it (uses the workspace AI budget). Images are ids from postfjord_list_media. A member opens the draft in the editor from editUrl. To send it, use postfjord_schedule_campaign, which needs the Schedule and publish level. " + RETRY_HINT,
 		inputSchema: {
 			name: z.string().max(80).optional().describe("An internal name, only the team sees it."),
-			subject: z.string().max(150).optional(),
+			subject: z.string().max(150).optional().describe("The subject line. Leave out when you send a brief."),
 			preheader: z.string().max(150).optional().describe("The line inboxes show after the subject."),
 			language: z.string().max(20).optional().describe("Two letter language code of the email, for example en or es. Default: the brand's."),
 			blocks: z.array(blockSchema$1).max(40).optional().describe("The email top to bottom. Leave out when you send a brief."),
@@ -352,10 +440,10 @@ function registerMailTools(server, api) {
 		description: "Changes the subject, preheader, name, blocks or audience of a draft email; only send what changes. The audience is tags (tag names), segment (a saved segment) or everyone: true, one of the three. blocks replaces all blocks: keep a block as it is with { \"type\": \"keep\", \"id\": \"...\" } using ids from postfjord_get_campaign. A block written back with its id stays in its background box. Only a draft can change; a scheduled email must be unscheduled first with postfjord_cancel_campaign. Automation emails are changed in the app.",
 		inputSchema: {
 			campaignId: idSchema,
-			name: z.string().max(80).optional(),
-			subject: z.string().max(150).optional(),
-			preheader: z.string().max(150).optional(),
-			blocks: z.array(blockSchema$1).max(40).optional(),
+			name: z.string().max(80).optional().describe("An internal name, only the team sees it."),
+			subject: z.string().max(150).optional().describe("The new subject line."),
+			preheader: z.string().max(150).optional().describe("The line inboxes show after the subject."),
+			blocks: z.array(blockSchema$1).max(40).optional().describe("Replaces all blocks, top to bottom."),
 			tags: z.array(z.string().trim().min(1).max(100)).min(1).max(10).optional().describe("Send only to contacts with any of these tags, by tag name."),
 			segment: z.string().trim().min(1).max(100).optional().describe("Send only to this saved segment, by name or id."),
 			everyone: z.literal(true).optional().describe("Send to everyone who said yes again.")
@@ -489,8 +577,9 @@ function registerChatTools(server, api, { run }) {
 			tag: z.string().max(80).optional().describe("Only conversations with this tag (its name)."),
 			limit: z.number().int().min(1).max(30).optional().describe("How many at most. Default 20."),
 			cursor: z.string().max(260).optional().describe("nextCursor from the previous page.")
-		}
-	}, run((a) => api("GET", "/conversations", null, a)));
+		},
+		outputSchema: OUTPUT.conversations
+	}, typed((a) => api("GET", "/conversations", null, a)));
 	server.registerTool("postfjord_get_conversation", {
 		title: "Read a conversation",
 		annotations: {
@@ -813,10 +902,10 @@ function registerPagesTools(server, api) {
 		description: "Changes a page's draft: title, blocks, description, search title, style, Hide from Google (hideFromSearch), or when a landing page is online (liveFrom, liveUntil). Send only what changes; blocks replaces the whole list, so send every block that stays, with its id from postfjord_get_page. A published page stays live with the version that was published, as in the app, until it is published again with postfjord_publish_page. The answer has the page and the checks that still stop a publish.",
 		inputSchema: {
 			pageId: pageIdSchema,
-			title: z.string().optional(),
+			title: z.string().optional().describe("The page's name, up to 60 characters."),
 			blocks: z.array(blockSchema).optional().describe(BLOCKS_HELP),
-			description: z.string().optional(),
-			seoTitle: z.string().optional(),
+			description: z.string().optional().describe("What Google and shared links show under the title, up to 200 characters."),
+			seoTitle: z.string().optional().describe("A title for Google and shared links, up to 70 characters."),
 			style: z.enum(STYLES).optional().describe("A new style resets the colours to the style's, with the brand kit's on top unless useBrand is false."),
 			useBrand: z.boolean().optional(),
 			liveFrom: z.string().nullable().optional().describe(LIVE_HELP),
@@ -904,6 +993,7 @@ function registerMentionsTools(server, api, { run }) {
 }
 //#endregion
 //#region mcp/toolsGoals.js
+const emailSchema = z.string().min(3).max(254).regex(/^[^\s@]+@[^\s@]+$/, "An email address looks like name@example.com.");
 const goalIdSchema = z.string().regex(/^[A-Za-z0-9]{1,30}$/, "A goal id has letters and digits only. Use an id from postfjord_list_goals or postfjord_plan_goal.").describe("The goal id from postfjord_plan_goal or postfjord_list_goals.");
 const sequenceIdSchema = z.string().regex(/^[A-Za-z0-9_-]{1,60}$/, "An email automation id has letters, digits, - and _ only. Use an id from postfjord_list_email_automations.").describe("The email automation id from postfjord_list_email_automations.");
 const g = (id) => `/goals/${encodeURIComponent(id)}`;
@@ -1222,9 +1312,9 @@ function registerContactTools(server, api, { run }) {
 		},
 		description: "Adds a person to the contacts, or updates the contact with that address. Only for someone who asked to hear from the workspace, never an address found elsewhere. askToConfirm true sends them an email to confirm they want the emails (double opt-in): only confirmed people get emails or automations. That email goes out at once, so confirm with the person you are helping before you set askToConfirm true. While the workspace is paused no email goes out, and the answer says so. An address that unsubscribed or bounced is not added. Tag them afterwards with postfjord_tag_contact. Needs email switched on and the Publish scope. " + RETRY_HINT,
 		inputSchema: {
-			email: z.string().min(3).max(254),
-			firstName: z.string().max(100).optional(),
-			lastName: z.string().max(100).optional(),
+			email: emailSchema.describe("The person's email address, as they gave it to the workspace."),
+			firstName: z.string().max(100).optional().describe("First name, used to greet them in emails."),
+			lastName: z.string().max(100).optional().describe("Last name."),
 			askToConfirm: z.boolean().optional().describe("Send the confirmation email now. Default false."),
 			idempotency_key: idempotencyKey
 		}
@@ -1242,8 +1332,8 @@ function registerContactTools(server, api, { run }) {
 		},
 		description: "Adds tags by name to the contact with this address. A new name makes the tag. For a confirmed contact a tag can start an email automation right away. Before you add a tag, check postfjord_list_email_automations for one that this tag starts; if there is one, tell the person you are helping and wait for their yes. The answer lists in startsAutomations the automations the added tags start for a confirmed contact. Needs the Publish scope. " + RETRY_HINT,
 		inputSchema: {
-			email: z.string().min(3).max(254),
-			tags: z.array(tagName).min(1).max(10),
+			email: emailSchema.describe("The address of a contact that exists, see postfjord_list_contacts."),
+			tags: z.array(tagName).min(1).max(10).describe("Tag names to add. A new name makes the tag."),
 			idempotency_key: idempotencyKey
 		}
 	}, run((a) => {
@@ -1264,6 +1354,14 @@ const COLORS = [
 	"ljung",
 	"neutral"
 ];
+function notesRange({ from, to } = {}, now = Date.now()) {
+	const today = new Date(now).toISOString().slice(0, 10);
+	const start = from || (to && to < today ? (/* @__PURE__ */ new Date(Date.parse(`${to}T00:00:00Z`) - 2592e6)).toISOString().slice(0, 10) : today);
+	return {
+		from: start,
+		to: to || new Date(Date.parse(`${start}T00:00:00Z`) + 2592e6).toISOString().slice(0, 10)
+	};
+}
 /** Registers the calendar note tools and postfjord_bulk_update_posts. `run` comes from tools.js. */
 function registerCalendarTools(server, api, { run }) {
 	server.registerTool("postfjord_list_calendar_notes", {
@@ -1272,15 +1370,12 @@ function registerCalendarTools(server, api, { run }) {
 			readOnlyHint: true,
 			openWorldHint: false
 		},
-		description: "Read only. The notes on the calendar with a day between from and to: a title, optional text, a colour and the days it covers (from and to, both included, in the workspace time zone). Notes mark things like a sale, a holiday or a course start; read them before you plan posts for those days. At most 400 days at a time.",
+		description: "Read only. The notes on the calendar with a day between from and to: a title, optional text, a colour and the days it covers (from and to, both included, in the workspace time zone). Notes mark things like a sale, a holiday or a course start; read them before you plan posts for those days. At most 400 days at a time. Left out, from is today and to 30 days after from.",
 		inputSchema: {
-			from: day.describe("First day, YYYY-MM-DD."),
-			to: day.describe("Last day, YYYY-MM-DD, at most 400 days after from.")
+			from: day.optional().describe("First day, YYYY-MM-DD. Default today (UTC)."),
+			to: day.optional().describe("Last day, YYYY-MM-DD, at most 400 days after from. Default 30 days after from.")
 		}
-	}, run((a) => api("GET", "/calendar-notes", null, {
-		from: a.from,
-		to: a.to
-	})));
+	}, run((a) => api("GET", "/calendar-notes", null, notesRange(a))));
 	server.registerTool("postfjord_create_calendar_note", {
 		title: "Create calendar note",
 		annotations: {
@@ -1313,9 +1408,9 @@ function registerCalendarTools(server, api, { run }) {
 		description: "Changes a calendar note. Send only what changes. Sending from without to moves the whole note and keeps how many days it covers.",
 		inputSchema: {
 			noteId: noteIdSchema,
-			title: z.string().min(1).max(80).optional(),
-			from: day.optional(),
-			to: day.optional(),
+			title: z.string().min(1).max(80).optional().describe("A short title, at most 80 characters."),
+			from: day.optional().describe("New first day, YYYY-MM-DD. Without to, the note keeps its length."),
+			to: day.optional().describe("New last day, YYYY-MM-DD."),
 			text: z.string().max(500).optional().describe("An empty string removes the text."),
 			color: z.enum(COLORS).optional()
 		}
@@ -1429,7 +1524,7 @@ const run = (fn) => async (args) => {
 		return fail(err);
 	}
 };
-const postIdSchema = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/, "A post id has letters, digits, - and _ only.");
+const postIdSchema = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/, "A post id has letters, digits, - and _ only.").describe("A post id, from postfjord_list_calendar or postfjord_create_draft.");
 const p = (postId) => `/posts/${encodeURIComponent(postId)}`;
 const STATS_DAYS = [
 	7,
@@ -1497,8 +1592,9 @@ function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile
 			openWorldHint: false
 		},
 		description: "Connected social accounts in this workspace with their ids, platform, status and limits (max text length, max hashtags, whether links are clickable in the text), and aspects: the picture shapes each format offers. Use the ids as channelIds when creating posts.",
-		inputSchema: {}
-	}, run(() => api("GET", "/channels")));
+		inputSchema: {},
+		outputSchema: OUTPUT.channels
+	}, typed(() => api("GET", "/channels")));
 	server.registerTool("postfjord_get_brand_profile", {
 		title: "Get brand profile",
 		annotations: {
@@ -1506,8 +1602,9 @@ function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile
 			openWorldHint: false
 		},
 		description: "Tone of voice, audience, do/dont rules, content pillars, preferred hashtags and example posts for this workspace, plus the content strategy as strategy (goal, positioning, pillars with their share of posts, posts per week, lean into, avoid; null when there is none). Read it before writing any post.",
-		inputSchema: {}
-	}, run(() => api("GET", "/brand")));
+		inputSchema: {},
+		outputSchema: OUTPUT.brand
+	}, typed(() => api("GET", "/brand")));
 	server.registerTool("postfjord_list_calendar", {
 		title: "List calendar",
 		annotations: {
@@ -1518,10 +1615,19 @@ function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile
 		inputSchema: {
 			from: z.string().optional().describe("YYYY-MM-DD for a whole day in the workspace time zone, or an ISO date-time. Inclusive"),
 			to: z.string().optional().describe("YYYY-MM-DD for a whole day in the workspace time zone, or an ISO date-time. Inclusive"),
-			status: z.string().optional(),
-			limit: z.number().int().min(1).max(200).optional()
-		}
-	}, run(async (a) => {
+			status: z.enum([
+				"draft",
+				"scheduled",
+				"publishing",
+				"published",
+				"partial",
+				"failed",
+				"cancelled"
+			]).optional().describe("Only posts in this state, instead of a date range."),
+			limit: z.number().int().min(1).max(200).optional().describe("How many posts at most.")
+		},
+		outputSchema: OUTPUT.calendar
+	}, typed(async (a) => {
 		const posts = await api("GET", "/posts", null, a);
 		const dayOf = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : null;
 		if (a.status || !dayOf(a.from) || !dayOf(a.to) || !Array.isArray(posts)) return posts;
@@ -1540,8 +1646,9 @@ function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile
 		},
 		title: "Get post",
 		description: "One post with its per-channel status, permalinks and errors, and each channel's picture shape (aspect) and fit. To see the pictures themselves, use postfjord_preview_post.",
-		inputSchema: { postId: postIdSchema }
-	}, run((a) => api("GET", p(a.postId))));
+		inputSchema: { postId: postIdSchema },
+		outputSchema: OUTPUT.post
+	}, typed((a) => api("GET", p(a.postId))));
 	server.registerTool("postfjord_preview_post", {
 		title: "Preview post pictures",
 		annotations: {
@@ -1592,14 +1699,14 @@ function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile
 		description: "Changes one existing draft or scheduled post; for the same change on many posts use postfjord_bulk_update_posts, and for a new post postfjord_create_draft. Only send the fields to change. scheduledAt: an ISO date-time schedules, null turns it back into a draft. bioLink alone, or videoPage alone, also works on a published post. Send targets.<channelId>.aspect and fit to change how a channel shows its pictures. " + FIT_HINT,
 		inputSchema: {
 			postId: postIdSchema,
-			baseText: z.string().optional(),
-			channelIds: z.array(z.string()).optional(),
-			targets: z.record(z.string(), targetSchema).optional(),
-			mediaIds: z.array(z.string()).optional(),
-			link: z.string().optional(),
+			baseText: z.string().optional().describe("The new post text for every channel without its own text in targets."),
+			channelIds: z.array(z.string()).optional().describe("Replaces the channels: ids from postfjord_list_channels."),
+			targets: z.record(z.string(), targetSchema).optional().describe("Per-channel changes keyed by channel id."),
+			mediaIds: z.array(z.string()).optional().describe("Replaces the media: ids from postfjord_list_media, in display order."),
+			link: z.string().optional().describe("URL for platforms that support links in the text. An empty string removes it."),
 			bioLink: z.string().optional().describe("Where a tap on this post on your link in bio page goes. Never added to the post. On update, send it alone to change it on a published post (needs a key that may publish). An empty string removes it."),
 			scheduledAt: z.string().nullable().optional().describe("ISO 8601 date-time with its time zone offset, e.g. 2026-09-10T08:00:00-04:00 (a time without one is refused). null turns a scheduled post back into a draft."),
-			pillar: z.string().nullable().optional(),
+			pillar: z.string().nullable().optional().describe("Content pillar label; null clears it."),
 			intent: z.enum(["give", "ask"]).nullable().optional().describe("give or ask; null clears the label."),
 			videoPage: z.boolean().optional().describe("The video page switch. Send it alone to switch the page of a published video on or off (needs a key that may publish). Turning it on for a published video without a page makes one, which counts toward the plan's video pages for the month.")
 		}
@@ -1648,7 +1755,7 @@ function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile
 			openWorldHint: false
 		},
 		title: "Cancel scheduled post",
-		description: "Cancels a scheduled post so it will not be published. It stays in the queue as cancelled.",
+		description: "Cancels a scheduled post so it will not be published, and answers with the post as it is now. It stays in the calendar as cancelled: postfjord_schedule_post gives it a time again, postfjord_delete_post removes it. A post that is already publishing or published cannot be cancelled.",
 		inputSchema: { postId: postIdSchema }
 	}, run((a) => api("POST", `${p(a.postId)}/cancel`)));
 	server.registerTool("postfjord_delete_post", {
@@ -1659,7 +1766,7 @@ function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile
 			openWorldHint: false
 		},
 		title: "Delete post",
-		description: "Deletes a draft or cancelled post.",
+		description: "Deletes a draft or cancelled post for good, and answers with what was deleted (id, the status it had, the start of its text). A scheduled post must be cancelled first with postfjord_cancel_post; a published post stays on the social accounts and cannot be deleted here.",
 		inputSchema: { postId: postIdSchema }
 	}, run((a) => api("DELETE", p(a.postId))));
 	server.registerTool("postfjord_list_media", {
@@ -1670,14 +1777,15 @@ function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile
 		},
 		description: "Images and videos in the media library, newest first: id, kind, status (processing, ready or failed, with the error), name, alt text, size in bytes, width and height, durationSec for a video, and a thumbnail URL for a picture (a video has none yet). Use the ids as mediaIds.",
 		inputSchema: {
-			limit: z.number().int().min(1).max(200).optional(),
+			limit: z.number().int().min(1).max(200).optional().describe("How many files at most."),
 			status: z.enum([
 				"ready",
 				"processing",
 				"failed"
 			]).optional().describe("Only files in this state. ready: the ones a post can use now.")
-		}
-	}, run((a) => api("GET", "/media", null, a)));
+		},
+		outputSchema: OUTPUT.mediaList
+	}, typed((a) => api("GET", "/media", null, a)));
 	server.registerTool("postfjord_get_media", {
 		title: "Get media",
 		annotations: {
@@ -1685,8 +1793,9 @@ function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile
 			openWorldHint: false
 		},
 		description: "One file in the media library by id, as postfjord_list_media shows it, and for a picture that is ready previews: a link (valid one hour) with width and height for each stored shape (original, 1x1, 4x5, 16x9, 9x16), so you can see how a crop would look before choosing a shape. A channel's own crop (a focus, a zoom, or whole) shows in postfjord_preview_post. Use it after postfjord_upload_media to see when the file is ready: a picture takes a few seconds, a video up to a minute.",
-		inputSchema: { mediaId: z.string().regex(/^[A-Za-z0-9_-]{1,128}$/, "A media id has letters, digits, - and _ only.") }
-	}, run((a) => api("GET", `/media/${encodeURIComponent(a.mediaId)}`)));
+		inputSchema: { mediaId: z.string().regex(/^[A-Za-z0-9_-]{1,128}$/, "A media id has letters, digits, - and _ only.").describe("A media id, from postfjord_list_media or postfjord_upload_media.") },
+		outputSchema: OUTPUT.media
+	}, typed((a) => api("GET", `/media/${encodeURIComponent(a.mediaId)}`)));
 	server.registerTool("postfjord_upload_media", {
 		title: "Upload media",
 		annotations: {
@@ -1791,7 +1900,7 @@ function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile
 			openWorldHint: false
 		},
 		title: "Get publish log",
-		description: "Attempt-by-attempt log for a post: channel, attempt, status, error.",
+		description: "Read only. Every publish attempt of one post, per channel: the attempt number, its status, when, and the error the platform gave. Use it when postfjord_get_post shows a failed or partial channel, to tell the person what went wrong and whether a fix (a picture shape, a shorter text, a reconnected channel) and postfjord_publish_now will help.",
 		inputSchema: { postId: postIdSchema }
 	}, run((a) => api("GET", `${p(a.postId)}/log`)));
 	server.registerTool("postfjord_get_analytics", {
@@ -1801,8 +1910,9 @@ function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile
 			openWorldHint: false
 		},
 		description: "How the workspace is doing, the numbers the Analytics screen shows: per channel followers and change, posts, likes and comments, per post and as a rate of followers, reach where the platform shares it; the top posts across channels with their text and link; and the best weekday and hour to post (in the workspace time zone, measured against each channel's usual). days is 7, 30, 90 or 365 (default 30), cut to what the plan keeps. Read notes for what is missing and why. Use it to answer what performed and to plan posts like the ones that did.",
-		inputSchema: { days: z.union([z.number(), z.string()]).optional() }
-	}, run((a) => {
+		inputSchema: { days: z.union([z.number(), z.string()]).optional().describe("7, 30, 90 or 365. Any other number uses the nearest of these.") },
+		outputSchema: OUTPUT.analytics
+	}, typed((a) => {
 		const days = nearestStatsDays(a.days);
 		return api("GET", "/analytics", void 0, days ? { days } : void 0);
 	}));
@@ -1825,14 +1935,14 @@ function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile
 		},
 		description: "Asks Postfjord's built-in composer to draft text per channel from a brief, in the brand voice, and returns the text only: nothing is saved (save it with postfjord_create_draft). To save a draft for every channel and an email from one idea in one call, use postfjord_repurpose_idea instead. Uses the workspace AI budget. Usually you can write the post yourself instead; use this when the user explicitly wants Postfjord's composer.",
 		inputSchema: {
-			brief: z.string(),
+			brief: z.string().min(1).max(4e3).describe("What the post is about, in a sentence or a few."),
 			channels: z.array(z.object({
 				id: z.string(),
 				platform: z.string(),
 				name: z.string().optional()
 			})),
-			mediaSummary: z.string().optional(),
-			tone: z.string().optional()
+			mediaSummary: z.string().max(1e3).optional().describe("What the pictures or video show, so the text can talk about them."),
+			tone: z.string().max(200).optional().describe("A tone for this post only, such as playful or calm. Left out: the brand voice.")
 		}
 	}, run((a) => api("POST", "/ai/compose", a)));
 	server.registerTool("postfjord_repurpose_idea", {
