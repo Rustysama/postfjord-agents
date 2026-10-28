@@ -1504,6 +1504,42 @@ function registerWorkspaceTools(server, api, { run }) {
 	}, run(() => api("GET", "/workspaces/overview")));
 }
 //#endregion
+//#region mcp/toolsCore.js
+/** The 25 tools the short list keeps, by name. */
+const CORE_TOOLS = /* @__PURE__ */ new Set([
+	"postfjord_list_channels",
+	"postfjord_get_brand_profile",
+	"postfjord_list_calendar",
+	"postfjord_get_post",
+	"postfjord_preview_post",
+	"postfjord_create_draft",
+	"postfjord_update_post",
+	"postfjord_schedule_post",
+	"postfjord_publish_now",
+	"postfjord_cancel_post",
+	"postfjord_delete_post",
+	"postfjord_bulk_update_posts",
+	"postfjord_list_media",
+	"postfjord_get_media",
+	"postfjord_upload_media",
+	"postfjord_resize_media",
+	"postfjord_get_analytics",
+	"postfjord_get_weekly_signals",
+	"postfjord_ai_compose",
+	"postfjord_repurpose_idea",
+	"postfjord_list_calendar_notes",
+	"postfjord_create_calendar_note",
+	"postfjord_list_conversations",
+	"postfjord_draft_reply",
+	"postfjord_send_reply"
+]);
+/** A server that registers only the tools named in `names` and leaves the rest out. */
+function onlyTools(server, names) {
+	return { registerTool(name, config, handler) {
+		return names.has(name) ? server.registerTool(name, config, handler) : void 0;
+	} };
+}
+//#endregion
 //#region mcp/tools.js
 const asObject = (data) => Array.isArray(data) ? { items: data } : data !== null && typeof data === "object" ? data : { result: data ?? null };
 const ok = (data) => ({ content: [{
@@ -1581,9 +1617,10 @@ const fitTargetSchema = z.object({
 * admin only (the remote endpoint checks; the REST route checks again), so no customer's app ever
 * sees it.
 */
-function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile = null, mentions = false, goals = false, contacts = false, workspaces = null, team = false } = {}) {
+function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile = null, mentions = false, goals = false, contacts = false, workspaces = null, team = false, core = false } = {}) {
 	if (workspaces) registerWorkspaceTools(mcpServer, api, { run });
-	const server = workspaces ? withWorkspaceArg(mcpServer, workspaces.within) : mcpServer;
+	const all = workspaces ? withWorkspaceArg(mcpServer, workspaces.within) : mcpServer;
+	const server = core ? onlyTools(all, CORE_TOOLS) : all;
 	if (admin);
 	if (team);
 	server.registerTool("postfjord_list_channels", {
