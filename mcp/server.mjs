@@ -2063,7 +2063,8 @@ const PLATFORM_LIVE = {
 	shopifyblog: true,
 	team: "testers",
 	genfill: "testers",
-	brandreport: "testers"
+	brandreport: "testers",
+	pagedomains: false
 };
 Object.freeze([
 	true,
@@ -2091,7 +2092,8 @@ Object.freeze([
 	"aivideo",
 	"sell",
 	"wix",
-	"tumblr"
+	"tumblr",
+	"pagedomains"
 ]);
 Object.freeze([
 	"youtube",
