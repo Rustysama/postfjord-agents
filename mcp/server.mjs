@@ -720,6 +720,9 @@ const BLOCK_TYPES = [
 	"text",
 	"image",
 	"products",
+	"split",
+	"slider",
+	"gallery",
 	"links",
 	"button",
 	"booking",
@@ -731,7 +734,11 @@ const BLOCK_TYPES = [
 	"posts",
 	"video",
 	"list",
+	"features",
+	"pricing",
+	"stats",
 	"quote",
+	"reviews",
 	"faq",
 	"spacer"
 ];
@@ -742,6 +749,7 @@ const showSchema = z.object({
 	untilLocal: z.string().nullable().optional().describe("As postfjord_get_page gives it: until as a local time in the workspace time zone. Change until or untilLocal, not both.")
 }).nullable().optional().describe("When this block (or links row) is on the live page. A date and time with an offset, like 2026-11-27T09:00:00-05:00, or a local time like 2026-11-27T09:00 in the workspace time zone (timeZone in postfjord_get_page). null removes it.");
 const LIVE_HELP = "Landing pages only: when visitors can see the whole page, as a date and time with an offset or a local time in the workspace time zone (timeZone in postfjord_get_page). Before liveFrom the address says the page does not exist; after liveUntil visitors see that it has ended. null removes it. The link in bio page cannot be scheduled as a whole.";
+const MOTION_HELP = "true: sections fade in as visitors scroll and photos settle into place; false: the page stands still. New pages start with true. People who ask their device for less motion always see a still page. On a live page the change goes live with the next postfjord_publish_page.";
 const HIDE_HELP = "Landing pages only: true keeps the page out of Google and other search engines (a robots noindex tag, and it leaves the sitemap), so only people with the link find it. On a live page the change goes live with the next postfjord_publish_page.";
 const STYLES = [
 	"minimal",
@@ -773,9 +781,9 @@ const itemSchema = z.object({
 	show: showSchema
 }).catchall(z.any());
 const blockSchema = z.object({
-	type: z.enum(BLOCK_TYPES).describe("hero: the header with the name and a photo. text, heading, image, links (link buttons), button, booking (a button that opens a booking page: Calendly, Cal.com, Acuity, Mindbody, Square, Google Calendar or any https link), social (social icons), share (buttons that let visitors share the page on WhatsApp, email, X and LinkedIn), form (a signup form), countdown (a date to count down to, like a launch or the last day to sign up; use only a real date the person gave), location (the business address, opening hours, a Call button and map links; use only hours and an address the user gave you, never invent them), products (Shopify products the person picked in the app, each { title, href, mediaId, price }; keep them as postfjord_get_page gives them and never invent one), and the editor's other blocks: posts, video, list, quote, faq, spacer."),
+	type: z.enum(BLOCK_TYPES).describe("hero: the header with the name and a photo. text, heading, image, links (link buttons), button, booking (a button that opens a booking page: Calendly, Cal.com, Acuity, Mindbody, Square, Google Calendar or any https link), social (social icons), share (buttons that let visitors share the page on WhatsApp, email, X and LinkedIn), form (a signup form), countdown (a date to count down to, like a launch or the last day to sign up; use only a real date the person gave), location (the business address, opening hours, a Call button and map links; use only hours and an address the user gave you, never invent them), products (Shopify products the person picked in the app, each { title, href, mediaId, price }; keep them as postfjord_get_page gives them and never invent one), split (photo and text rows, items [{ mediaId, alt, eyebrow, heading, text, label, href }], start left or right), gallery (photos, layout grid, masonry or strip, items [{ mediaId, alt, caption }]), slider (slides people swipe, items [{ mediaId, alt, text (a quote), name }]), stats (up to 4 big numbers, items [{ value, label }]; only real numbers the person gave), features (points with an icon, columns 2 or 3, items [{ icon, title, text }], icon a name like star, heart, clock, mapPin, leaf, sparkles, users, sun), pricing (2 to 4 plans, items [{ name, price, period, text, features (one per line), label, href, featured }], one featured at most; only real prices), reviews (customer words as cards, items [{ text, name, detail, mediaId }]; only real reviews, never invent one), and the editor's other blocks: posts, video, list, quote, faq, spacer."),
 	id: z.string().optional().describe("Keep the id from postfjord_get_page for a block that stays; leave it out for a new block."),
-	layout: z.string().optional().describe("hero: avatar (round photo, for link in bio), center, cover (photo behind) or split. list: cards, rows, menu, checks or steps. booking: card (a box with a heading, a few lines and the button) or button (the button alone)."),
+	layout: z.string().optional().describe("hero: avatar (round photo, for link in bio), center, cover (photo behind), split or photo (a full screen photo, darkened, with the words on it; place says where). gallery: grid, masonry or strip. list: cards, rows, menu, checks or steps. booking: card (a box with a heading, a few lines and the button) or button (the button alone)."),
 	eyebrow: z.string().optional(),
 	heading: z.string().optional().describe("hero: the name or headline. form, list, faq, posts, booking (card): a heading."),
 	text: z.string().optional().describe("text: up to 2000 characters, blank lines between paragraphs. hero: a short line under the heading. heading: the heading itself. In text and in the hero line, a link on some words is written [the words](https://address); the page shows only the words, as a link. The address counts toward the length."),
@@ -834,6 +842,28 @@ const blockSchema = z.object({
 		sat: z.array(z.any()).optional(),
 		sun: z.array(z.any()).optional()
 	}).catchall(z.any()).optional().describe("location: opening hours per weekday, each a list of up to 3 { from, to } in 24 hour time, like { mon: [{ from: \"09:00\", to: \"17:00\" }] }. An empty list or a missing day is closed. A to at or before from runs past midnight; 24:00 is midnight."),
+	place: z.enum([
+		"left",
+		"center",
+		"bottom"
+	]).optional().describe("hero with layout photo: where the words sit on the photo, center by default."),
+	start: z.enum(["left", "right"]).optional().describe("split: the side of the first photo; the rows change sides from there."),
+	columns: z.string().optional().describe("features: 2 or 3. products: 2 or 3."),
+	bg: z.object({
+		fill: z.enum([
+			"soft",
+			"accent",
+			"ink",
+			"photo"
+		]),
+		mediaId: z.string().nullable().optional(),
+		dim: z.number().optional()
+	}).nullable().optional().describe("Any block: a background for its section, edge to edge. soft (a light tint), accent (the accent colour), ink (the page colours turned around) or photo with mediaId (from postfjord_list_media) and dim 55, 65 or 75 (how much darker in %, 65 by default; each keeps white words easy to read). null removes it."),
+	space: z.enum([
+		"compact",
+		"normal",
+		"airy"
+	]).nullable().optional().describe("Any block: the space above and below its section. normal by default."),
 	exceptions: z.array(z.any()).optional().describe("location: up to 12 special days, each { date: \"2026-11-26\", to (optional last day, at most 31 days later), label: \"Thanksgiving\", ranges: [] for closed or { from, to } times }."),
 	show: showSchema
 }).catchall(z.any());
@@ -882,6 +912,7 @@ function registerPagesTools(server, api) {
 			seoTitle: z.string().optional().describe("A title for Google and shared links, up to 70 characters."),
 			style: z.enum(STYLES).optional().describe("The look, minimal when left out."),
 			useBrand: z.boolean().optional().describe("false keeps the style's own colours instead of the brand kit's."),
+			motion: z.boolean().optional().describe(MOTION_HELP),
 			liveFrom: z.string().nullable().optional().describe(LIVE_HELP),
 			liveUntil: z.string().nullable().optional().describe(LIVE_HELP),
 			hideFromSearch: z.boolean().optional().describe(HIDE_HELP),
@@ -899,7 +930,7 @@ function registerPagesTools(server, api) {
 			idempotentHint: true,
 			openWorldHint: false
 		},
-		description: "Changes a page's draft: title, blocks, description, search title, style, Hide from Google (hideFromSearch), or when a landing page is online (liveFrom, liveUntil). Send only what changes; blocks replaces the whole list, so send every block that stays, with its id from postfjord_get_page. A published page stays live with the version that was published, as in the app, until it is published again with postfjord_publish_page. The answer has the page and the checks that still stop a publish.",
+		description: "Changes a page's draft: title, blocks, description, search title, style, motion, Hide from Google (hideFromSearch), or when a landing page is online (liveFrom, liveUntil). Send only what changes; blocks replaces the whole list, so send every block that stays, with its id from postfjord_get_page. A published page stays live with the version that was published, as in the app, until it is published again with postfjord_publish_page. The answer has the page and the checks that still stop a publish.",
 		inputSchema: {
 			pageId: pageIdSchema,
 			title: z.string().optional().describe("The page's name, up to 60 characters."),
@@ -908,6 +939,7 @@ function registerPagesTools(server, api) {
 			seoTitle: z.string().optional().describe("A title for Google and shared links, up to 70 characters."),
 			style: z.enum(STYLES).optional().describe("A new style resets the colours to the style's, with the brand kit's on top unless useBrand is false."),
 			useBrand: z.boolean().optional(),
+			motion: z.boolean().optional().describe(MOTION_HELP),
 			liveFrom: z.string().nullable().optional().describe(LIVE_HELP),
 			liveUntil: z.string().nullable().optional().describe(LIVE_HELP),
 			hideFromSearch: z.boolean().optional().describe(HIDE_HELP)
