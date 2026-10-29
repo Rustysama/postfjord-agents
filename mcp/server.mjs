@@ -749,6 +749,7 @@ const showSchema = z.object({
 	untilLocal: z.string().nullable().optional().describe("As postfjord_get_page gives it: until as a local time in the workspace time zone. Change until or untilLocal, not both.")
 }).nullable().optional().describe("When this block (or links row) is on the live page. A date and time with an offset, like 2026-11-27T09:00:00-05:00, or a local time like 2026-11-27T09:00 in the workspace time zone (timeZone in postfjord_get_page). null removes it.");
 const LIVE_HELP = "Landing pages only: when visitors can see the whole page, as a date and time with an offset or a local time in the workspace time zone (timeZone in postfjord_get_page). Before liveFrom the address says the page does not exist; after liveUntil visitors see that it has ended. null removes it. The link in bio page cannot be scheduled as a whole.";
+const MOTION_HELP = "true: sections fade in as visitors scroll and photos settle into place; false: the page stands still. New pages start with true. People who ask their device for less motion always see a still page. On a live page the change goes live with the next postfjord_publish_page.";
 const HIDE_HELP = "Landing pages only: true keeps the page out of Google and other search engines (a robots noindex tag, and it leaves the sitemap), so only people with the link find it. On a live page the change goes live with the next postfjord_publish_page.";
 const STYLES = [
 	"minimal",
@@ -911,6 +912,7 @@ function registerPagesTools(server, api) {
 			seoTitle: z.string().optional().describe("A title for Google and shared links, up to 70 characters."),
 			style: z.enum(STYLES).optional().describe("The look, minimal when left out."),
 			useBrand: z.boolean().optional().describe("false keeps the style's own colours instead of the brand kit's."),
+			motion: z.boolean().optional().describe(MOTION_HELP),
 			liveFrom: z.string().nullable().optional().describe(LIVE_HELP),
 			liveUntil: z.string().nullable().optional().describe(LIVE_HELP),
 			hideFromSearch: z.boolean().optional().describe(HIDE_HELP),
@@ -928,7 +930,7 @@ function registerPagesTools(server, api) {
 			idempotentHint: true,
 			openWorldHint: false
 		},
-		description: "Changes a page's draft: title, blocks, description, search title, style, Hide from Google (hideFromSearch), or when a landing page is online (liveFrom, liveUntil). Send only what changes; blocks replaces the whole list, so send every block that stays, with its id from postfjord_get_page. A published page stays live with the version that was published, as in the app, until it is published again with postfjord_publish_page. The answer has the page and the checks that still stop a publish.",
+		description: "Changes a page's draft: title, blocks, description, search title, style, motion, Hide from Google (hideFromSearch), or when a landing page is online (liveFrom, liveUntil). Send only what changes; blocks replaces the whole list, so send every block that stays, with its id from postfjord_get_page. A published page stays live with the version that was published, as in the app, until it is published again with postfjord_publish_page. The answer has the page and the checks that still stop a publish.",
 		inputSchema: {
 			pageId: pageIdSchema,
 			title: z.string().optional().describe("The page's name, up to 60 characters."),
@@ -937,6 +939,7 @@ function registerPagesTools(server, api) {
 			seoTitle: z.string().optional().describe("A title for Google and shared links, up to 70 characters."),
 			style: z.enum(STYLES).optional().describe("A new style resets the colours to the style's, with the brand kit's on top unless useBrand is false."),
 			useBrand: z.boolean().optional(),
+			motion: z.boolean().optional().describe(MOTION_HELP),
 			liveFrom: z.string().nullable().optional().describe(LIVE_HELP),
 			liveUntil: z.string().nullable().optional().describe(LIVE_HELP),
 			hideFromSearch: z.boolean().optional().describe(HIDE_HELP)
