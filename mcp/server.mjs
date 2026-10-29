@@ -857,7 +857,7 @@ const blockSchema = z.object({
 		]),
 		mediaId: z.string().nullable().optional(),
 		dim: z.number().optional()
-	}).nullable().optional().describe("Any block: a background for its section, edge to edge. soft (a light tint), accent (the accent colour), ink (the page colours turned around) or photo with mediaId (from postfjord_list_media) and dim 30, 50 or 70 (how much darker, 50 by default). null removes it."),
+	}).nullable().optional().describe("Any block: a background for its section, edge to edge. soft (a light tint), accent (the accent colour), ink (the page colours turned around) or photo with mediaId (from postfjord_list_media) and dim 55, 65 or 75 (how much darker in %, 65 by default; each keeps white words easy to read). null removes it."),
 	space: z.enum([
 		"compact",
 		"normal",
