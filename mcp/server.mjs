@@ -2061,7 +2061,8 @@ const PLATFORM_LIVE = {
 	wix: true,
 	tumblr: true,
 	shopifyblog: true,
-	team: "testers"
+	team: "testers",
+	genfill: "testers"
 };
 Object.freeze([
 	true,
@@ -2138,7 +2139,8 @@ Object.freeze([
 	"wix",
 	"tumblr",
 	"shopifyblog",
-	"team"
+	"team",
+	"genfill"
 ]);
 let activeLive = PLATFORM_LIVE;
 const mapOf = (live) => live && typeof live === "object" && typeof live.then !== "function" ? live : activeLive;
