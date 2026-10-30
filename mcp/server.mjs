@@ -2095,7 +2095,7 @@ const PLATFORM_LIVE = {
 	shopifyblog: true,
 	team: "testers",
 	genfill: "testers",
-	brandreport: "testers",
+	brandreport: true,
 	aiimages: "testers",
 	pagedomains: false
 };
