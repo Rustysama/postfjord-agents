@@ -2044,6 +2044,8 @@ function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile
 //#endregion
 //#region shared/channelSpecs.js
 const PLATFORM_LIVE = {
+	designtranslate: "testers",
+	aiphoto: "testers",
 	youtube: "testers",
 	pinterest: true,
 	x: true,
@@ -2178,7 +2180,9 @@ Object.freeze([
 	"team",
 	"genfill",
 	"brandreport",
-	"aiimages"
+	"aiimages",
+	"aiphoto",
+	"designtranslate"
 ]);
 let activeLive = PLATFORM_LIVE;
 const mapOf = (live) => live && typeof live === "object" && typeof live.then !== "function" ? live : activeLive;
