@@ -2044,9 +2044,9 @@ function registerTools(mcpServer, api, { admin = false, pages = true, uploadFile
 //#endregion
 //#region shared/channelSpecs.js
 const PLATFORM_LIVE = {
-	magiclayers: "testers",
-	designtranslate: "testers",
-	aiphoto: "testers",
+	magiclayers: true,
+	designtranslate: true,
+	aiphoto: true,
 	youtube: "testers",
 	pinterest: true,
 	x: true,
@@ -2083,11 +2083,11 @@ const PLATFORM_LIVE = {
 	make: false,
 	n8n: true,
 	onedrive: false,
-	designvideo: "testers",
+	designvideo: true,
 	clientportal: "testers",
 	metaads: "testers",
 	tiktokads: false,
-	aivideo: "testers",
+	aivideo: true,
 	sell: "testers",
 	livedictation: false,
 	reelsmusic: "testers",
@@ -2097,9 +2097,9 @@ const PLATFORM_LIVE = {
 	tumblr: true,
 	shopifyblog: true,
 	team: "testers",
-	genfill: "testers",
+	genfill: true,
 	brandreport: true,
-	aiimages: "testers",
+	aiimages: true,
 	pagedomains: false
 };
 Object.freeze([
