@@ -2099,7 +2099,7 @@ const PLATFORM_LIVE = {
 	aivideo: true,
 	sell: "testers",
 	livedictation: false,
-	reelsmusic: "testers",
+	reelsmusic: true,
 	wordpress: true,
 	ghost: true,
 	wix: true,
