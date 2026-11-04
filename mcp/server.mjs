@@ -519,7 +519,7 @@ const stepSchema = z.discriminatedUnion("type", [
 		askText: short(1e3),
 		thanksText: short(1e3).optional(),
 		invalidText: short(1e3).optional(),
-		askConsent: z.boolean().optional().describe("Also ask for a yes to the email list.")
+		askConsent: z.boolean().optional().describe("Also ask for a yes to the email list. On a Free workspace a step with this on is skipped: the DM does not ask and goes on to the next step.")
 	}),
 	z.object({
 		type: z.literal("followUp"),
@@ -1249,7 +1249,7 @@ function registerGoalsTools(server, api, { run }) {
 			idempotentHint: false,
 			openWorldHint: true
 		},
-		description: "Creates a signup form for the email list, switched on: the answer has its public link, and anyone with the link can sign up. Each person gets an email to confirm first (double opt-in), and the tags go on when they confirm. To plan a whole Flow around a goal (posts, DM, page and emails), use postfjord_plan_goal instead. Confirm the texts with the person first. Needs email switched on (postfjord_mail_overview) and the Publish scope; a workspace has at most 20 forms. " + RETRY_HINT,
+		description: "Creates a signup form for the email list, switched on: the answer has its public link, and anyone with the link can sign up. Each person gets an email to confirm first (double opt-in), and the tags go on when they confirm. On a Free workspace the form can be built and stays closed until a paid plan: the answer says closedUntilPaid. To plan a whole Flow around a goal (posts, DM, page and emails), use postfjord_plan_goal instead. Confirm the texts with the person first. Needs email switched on (postfjord_mail_overview) and the Publish scope; a workspace has at most 20 forms. " + RETRY_HINT,
 		inputSchema: {
 			name: z.string().max(60).optional().describe("An internal name, only the team sees it."),
 			heading: z.string().max(80).optional().describe("The heading on the form page."),
