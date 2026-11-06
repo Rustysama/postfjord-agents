@@ -2094,7 +2094,7 @@ const PLATFORM_LIVE = {
 	onedrive: false,
 	designvideo: true,
 	clientportal: "testers",
-	metaads: "testers",
+	metaads: true,
 	tiktokads: false,
 	aivideo: true,
 	sell: "testers",
