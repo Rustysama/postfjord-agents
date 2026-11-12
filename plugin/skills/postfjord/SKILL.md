@@ -1,6 +1,6 @@
 ---
 name: postfjord
-description: Plan, write, schedule and publish social posts through Postfjord (Instagram, Facebook, LinkedIn, Threads, TikTok, YouTube, Pinterest, X, Bluesky, Mastodon, Google Business Profile and blogs), read analytics and the publish log, draft and schedule emails, answer the Inbox, set up DM and email automations, landing pages and Flows. Use when a task mentions Postfjord, a content calendar, posting or scheduling to a connected social account, a week of posts, uploading a picture for a post, whether a post went out or how it did, an email to the list, a DM reply, or a landing page.
+description: Plan, write, schedule and publish social posts through Postfjord (Instagram, Facebook, LinkedIn, Threads, TikTok, Pinterest, X, Bluesky, Mastodon, Tumblr and blogs), read analytics and the publish log, draft and schedule emails, answer the Inbox, set up DM and email automations, landing pages and Flows. Use when a task mentions Postfjord, a content calendar, posting or scheduling to a connected social account, a week of posts, uploading a picture for a post, whether a post went out or how it did, an email to the list, a DM reply, or a landing page.
 ---
 
 # Working with Postfjord

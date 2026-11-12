@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Postfjord MCP server: social media and email from ChatGPT, Claude and Gemini</title>
+<meta name="description" content="Connect ChatGPT, Claude or Gemini to Postfjord over MCP. Plan and schedule posts for Instagram, Facebook, TikTok, LinkedIn and more, answer DMs and write emails in a chat. 65 tools, OAuth sign in, no install.">
+<link rel="canonical" href="https://rustysama.github.io/postfjord-agents/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Postfjord MCP server for social media and email">
+<meta property="og:description" content="Run your social posts, DMs and emails from ChatGPT, Claude or Gemini. 65 tools on one MCP address.">
+<meta property="og:url" content="https://rustysama.github.io/postfjord-agents/">
+<meta property="og:image" content="https://postfjord.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="https://postfjord.com/icon-512.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"SoftwareApplication","name":"Postfjord MCP server","applicationCategory":"BusinessApplication","operatingSystem":"Any","url":"https://rustysama.github.io/postfjord-agents/","sameAs":["https://github.com/Rustysama/postfjord-agents","https://postfjord.com/features/mcp"],"description":"MCP server that lets ChatGPT, Claude, Gemini and other AI apps plan, schedule and publish social posts, answer the inbox and write emails in a Postfjord workspace.","publisher":{"@type":"Organization","name":"Postfjord","url":"https://postfjord.com"},"license":"https://opensource.org/licenses/MIT"},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"What does the Postfjord MCP server do?","acceptedAnswer":{"@type":"Answer","text":"It connects your AI app to your Postfjord workspace. The app can then read your calendar, brand voice and numbers, write and schedule posts, answer DMs and comments, draft emails and set up automations, as far as you allow at sign in."}},
+{"@type":"Question","name":"Which social networks can it post to?","acceptedAnswer":{"@type":"Answer","text":"Instagram, Facebook, TikTok, LinkedIn, Pinterest, Threads, X, Bluesky, Mastodon and Tumblr, plus blog posts on WordPress, Ghost, Wix and Shopify."}},
+{"@type":"Question","name":"Will my AI app post without asking me?","acceptedAnswer":{"@type":"Answer","text":"Only if you allow it. You pick Read only, Drafts only or Schedule and publish when you connect. Each tool tells the app whether it changes something or reaches the public, so apps like Claude ask you before such a call."}},
+{"@type":"Question","name":"What does it cost?","acceptedAnswer":{"@type":"Answer","text":"The MCP server comes with the Solo, Studio and Agency plans of Postfjord. The local server and the skill in this repository are MIT licensed."}},
+{"@type":"Question","name":"Do I need to install anything?","acceptedAnswer":{"@type":"Answer","text":"No. Paste https://mcp.postfjord.com/mcp into your AI app and sign in. A local stdio server is in the repository for apps that start servers themselves."}}
+]}]}
+</script>
+<style>
+:root{--ground:#fbfaf7;--card:#fff;--sunken:#f4f1eb;--line:#ebe6dc;--ink:#14202a;--ink2:#4a5560;--fjord:#1f6f8b;--ljung:#6a4dab;--natt:#0a1c28;--is:#8fc8dc;--main:linear-gradient(100deg,#1f6f8b 0%,#6a4dab 100%);--display:"Bricolage Grotesque",system-ui,sans-serif;--body:"Hanken Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--ink);font:17px/1.6 var(--body)}
+a{color:var(--fjord)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
+.brand{display:flex;align-items:center;gap:10px;font:700 19px var(--display);color:var(--ink);text-decoration:none}
+.brand img{width:32px;height:32px;border-radius:9px}
+.top nav a{margin-left:18px;color:var(--ink2);text-decoration:none;font-weight:600;font-size:15px}
+.top nav a:hover{color:var(--ink)}
+.hero{padding:56px 0 40px;text-align:center}
+.eyebrow{font:500 13px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.1;margin:0}
+h1{font-size:clamp(36px,6vw,60px);margin:14px auto 18px;max-width:820px;background:var(--main);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:20px;color:var(--ink2);max-width:680px;margin:0 auto 28px}
+.addr{display:inline-flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 8px 8px 18px;max-width:100%}
+.addr code{font:500 16px var(--mono);overflow-wrap:anywhere;text-align:left}
+button.copy{font:600 14px var(--body);border:0;border-radius:10px;padding:10px 14px;background:var(--main);color:#fff;cursor:pointer;flex:none}
+.under{margin-top:14px;font-size:15px;color:var(--ink2)}
+section{padding:44px 0}
+h2{font-size:clamp(28px,4vw,40px);margin-bottom:10px}
+.sub{color:var(--ink2);max-width:680px;margin:0 0 26px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px}
+.card h3{font-size:21px;margin-bottom:8px}
+.card p{margin:0 0 10px;color:var(--ink2)}
+.ask{font-size:18px;color:var(--ink);margin:0}
+pre{background:var(--natt);color:#e9f1f4;border-radius:12px;padding:14px 16px;overflow-x:auto;font:14px/1.55 var(--mono);margin:10px 0 0}
+code{font-family:var(--mono);font-size:.92em}
+p code,li code{background:var(--sunken);padding:1px 6px;border-radius:6px}
+.levels{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:6px}
+.level b{display:block;font:700 18px var(--display);margin-bottom:4px}
+.tools h3{font-size:19px;margin:26px 0 10px}
+.tools ul{list-style:none;padding:0;margin:0;display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.tools li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:15px}
+.tools li code{display:block;background:none;padding:0;font-size:13px;color:var(--ink2)}
+.tools li span{font-weight:600}
+.tag{display:inline-block;font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:2px;background:var(--sunken);color:var(--ink2)}
+.tag.out{background:#efe9f8;color:#5a3f96}
+details{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:10px}
+summary{cursor:pointer;font-weight:700;font-size:18px}
+details p{margin:10px 0 0;color:var(--ink2)}
+.cta{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:36px 24px;text-align:center}
+.btn{display:inline-block;text-decoration:none;font-weight:700;border-radius:12px;padding:13px 22px;margin:6px}
+.btn.main{background:var(--main);color:#fff}
+.btn.quiet{border:1px solid var(--line);color:var(--ink);background:var(--ground)}
+footer{background:var(--natt);color:#c9d6dd;margin-top:40px;padding:36px 0;font-size:15px}
+footer a{color:var(--is);text-decoration:none;margin-right:18px;display:inline-block;margin-bottom:8px}
+@media (max-width:640px){.top nav a:not(.gh){display:none}.hero{padding:32px 0 24px}.lead{font-size:18px}.addr{flex-direction:column;align-items:stretch;padding:12px}.addr code{text-align:center}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <a class="brand" href="https://postfjord.com"><img src="https://postfjord.com/icon-512.png" alt="" width="32" height="32">Postfjord</a>
+  <nav><a href="#connect">Connect</a><a href="#tools">Tools</a><a href="#faq">FAQ</a><a class="gh" href="https://github.com/Rustysama/postfjord-agents">GitHub</a></nav>
+</header>
+
+<div class="hero">
+  <div class="eyebrow">MCP server for social media and email</div>
+  <h1>Run your social media from ChatGPT, Claude or Gemini</h1>
+  <p class="lead">Connect your AI app to <a href="https://postfjord.com">Postfjord</a> and ask for the week's posts, the reply to a DM or this month's newsletter. It writes them in your brand voice, puts them in your calendar and waits for your yes.</p>
+  <div class="addr"><code id="mcp-url">https://mcp.postfjord.com/mcp</code><button class="copy" type="button" onclick="navigator.clipboard.writeText('https://mcp.postfjord.com/mcp').then(()=>{this.textContent='Copied'})">Copy address</button></div>
+  <p class="under">Paste the address in your AI app and sign in. Nothing to install, no key to paste.</p>
+</div>
+
+<section>
+  <h2>Ask the way you would ask a person</h2>
+  <p class="sub">Your AI app reads what it needs from your workspace: your brand voice, your calendar, your contacts and how your posts did. Then it does the work and shows you the result.</p>
+  <div class="grid">
+    <div class="card"><p class="ask">"Plan next week: three posts for Instagram and Facebook, Tuesday, Thursday and Saturday at 9 New York time. Leave them as drafts."</p></div>
+    <div class="card"><p class="ask">"Which posts did best last month? Plan three more like them."</p></div>
+    <div class="card"><p class="ask">"Who is waiting for an answer in the inbox? Draft a reply to each and show me before you send."</p></div>
+    <div class="card"><p class="ask">"DM everyone who comments CLASS the booking link."</p></div>
+    <div class="card"><p class="ask">"Email the best post to my list, with a button to book."</p></div>
+    <div class="card"><p class="ask">"Did yesterday's post go out? If something failed, tell me why."</p></div>
+  </div>
+</section>
+
+<section id="connect">
+  <h2>Connect in two minutes</h2>
+  <p class="sub">The first time, your browser opens Postfjord. Sign in, pick the workspace and what the app may do, and press Allow. You need to own the workspace, on the Solo plan or bigger.</p>
+  <div class="grid">
+    <div class="card"><h3>ChatGPT</h3><p>Open Plugins and press +. Pick Add custom MCP server (turn on developer mode in the settings if you do not see it), paste the address, choose OAuth and create it.</p><p><a href="https://postfjord.com/integrations/chatgpt">ChatGPT and Postfjord</a></p></div>
+    <div class="card"><h3>Claude</h3><p>On claude.ai, Claude Desktop or the phone app: open Customize, then Connectors. Press Add custom connector, paste the address, press Add and then Connect.</p><p><a href="https://postfjord.com/integrations/anthropic">Claude and Postfjord</a></p></div>
+    <div class="card"><h3>Gemini</h3><p>In the Gemini app: Settings, Connected Apps, Add a custom app. In Gemini CLI, add this under <code>mcpServers</code> in <code>~/.gemini/settings.json</code>, then run <code>/mcp auth postfjord</code>.</p><pre>"postfjord": { "httpUrl": "https://mcp.postfjord.com/mcp" }</pre></div>
+    <div class="card"><h3>Claude Code</h3><p>The server and the Postfjord skill in one install:</p><pre>claude plugin marketplace add Rustysama/postfjord-agents
+claude plugin install postfjord@postfjord</pre></div>
+    <div class="card"><h3>Cursor, VS Code, Codex and others</h3><p>Any app that speaks MCP over HTTP can use the same address. Apps that cannot open a browser use a key from Postfjord, Settings, Apps, sent as <code>Authorization: Bearer pf_live_...</code>.</p><p><a href="https://postfjord.com/help/mcp">Steps for every app</a></p></div>
+    <div class="card"><h3>Local server</h3><p>For apps that start servers themselves. It reads pictures and videos from your own disk.</p><pre>cd mcp &amp;&amp; npm install
+POSTFJORD_API_KEY=pf_live_... node server.mjs</pre><p><a href="https://github.com/Rustysama/postfjord-agents/tree/main/mcp">Source on GitHub</a></p></div>
+  </div>
+</section>
+
+<section>
+  <h2>You choose how far it goes</h2>
+  <p class="sub">You pick a level for every connection when you sign in, and you can revoke it any time in Postfjord under Settings, Apps.</p>
+  <div class="levels">
+    <div class="card level"><b>Read only</b>Looks at your calendar, numbers, inbox and email reports. Changes nothing.</div>
+    <div class="card level"><b>Drafts only</b>Writes drafts, adds pictures and builds automations that stay paused. Nothing it makes can go out.</div>
+    <div class="card level"><b>Schedule and publish</b>Can also put a time on a post, publish, send an email or a reply, and switch an automation on.</div>
+  </div>
+  <p class="sub" style="margin-top:20px">No tool reaches billing, team members, API keys or your connected social accounts, and none deletes a post that already went out. Each tool tells the app whether it changes something or reaches the public, so apps like Claude ask you first. Tools that send something take an idempotency key, so a retry never posts twice.</p>
+</section>
+
+<section id="tools" class="tools">
+  <h2>65 tools</h2>
+  <p class="sub">Generated from the definitions the hosted server runs. <span class="tag">reads</span> changes nothing. <span class="tag out">goes out</span> can put something on a social account, in an inbox or on a public page.</p>
+  <h3>Posts and calendar</h3>
+  <ul>
+    <li><span>List calendar</span><i class="tag">reads</i><code>postfjord_list_calendar</code></li>
+    <li><span>Get post</span><i class="tag">reads</i><code>postfjord_get_post</code></li>
+    <li><span>Preview post pictures</span><code>postfjord_preview_post</code></li>
+    <li><span>Create draft or scheduled post</span><code>postfjord_create_draft</code></li>
+    <li><span>Update post</span><code>postfjord_update_post</code></li>
+    <li><span>Schedule post</span><i class="tag out">goes out</i><code>postfjord_schedule_post</code></li>
+    <li><span>Publish now</span><i class="tag out">goes out</i><code>postfjord_publish_now</code></li>
+    <li><span>Cancel scheduled post</span><code>postfjord_cancel_post</code></li>
+    <li><span>Delete post</span><code>postfjord_delete_post</code></li>
+    <li><span>AI compose (server side)</span><code>postfjord_ai_compose</code></li>
+    <li><span>One idea to every format (drafts only)</span><i class="tag out">goes out</i><code>postfjord_repurpose_idea</code></li>
+    <li><span>List calendar notes</span><i class="tag">reads</i><code>postfjord_list_calendar_notes</code></li>
+    <li><span>Create calendar note</span><code>postfjord_create_calendar_note</code></li>
+    <li><span>Update calendar note</span><code>postfjord_update_calendar_note</code></li>
+    <li><span>Delete calendar note</span><code>postfjord_delete_calendar_note</code></li>
+    <li><span>Change many posts at once</span><code>postfjord_bulk_update_posts</code></li>
+  </ul>
+  <h3>Media</h3>
+  <ul>
+    <li><span>List media</span><i class="tag">reads</i><code>postfjord_list_media</code></li>
+    <li><span>Get media</span><i class="tag">reads</i><code>postfjord_get_media</code></li>
+    <li><span>Upload media</span><i class="tag out">goes out</i><code>postfjord_upload_media</code></li>
+    <li><span>Make it a reel</span><code>postfjord_make_reel</code></li>
+    <li><span>Resize a picture</span><code>postfjord_resize_media</code></li>
+  </ul>
+  <h3>Results</h3>
+  <ul>
+    <li><span>Get publish log</span><i class="tag">reads</i><code>postfjord_get_publish_log</code></li>
+    <li><span>Get analytics</span><i class="tag">reads</i><code>postfjord_get_analytics</code></li>
+    <li><span>Get weekly signals</span><i class="tag">reads</i><code>postfjord_get_weekly_signals</code></li>
+    <li><span>List mentions</span><i class="tag">reads</i><code>postfjord_list_mentions</code></li>
+    <li><span>Read a mention</span><i class="tag">reads</i><code>postfjord_get_mention</code></li>
+  </ul>
+  <h3>Inbox and DM automations</h3>
+  <ul>
+    <li><span>List inbox conversations</span><i class="tag">reads</i><code>postfjord_list_conversations</code></li>
+    <li><span>Read a conversation</span><i class="tag">reads</i><code>postfjord_get_conversation</code></li>
+    <li><span>Draft a reply (sends nothing)</span><code>postfjord_draft_reply</code></li>
+    <li><span>Send a reply</span><i class="tag out">goes out</i><code>postfjord_send_reply</code></li>
+    <li><span>List DM automations</span><i class="tag">reads</i><code>postfjord_list_automations</code></li>
+    <li><span>Create a DM automation (paused)</span><code>postfjord_create_automation</code></li>
+    <li><span>Switch an automation on or off</span><i class="tag out">goes out</i><code>postfjord_set_automation</code></li>
+  </ul>
+  <h3>Email and contacts</h3>
+  <ul>
+    <li><span>Email overview</span><i class="tag">reads</i><code>postfjord_mail_overview</code></li>
+    <li><span>List email contacts</span><i class="tag">reads</i><code>postfjord_list_contacts</code></li>
+    <li><span>List email campaigns</span><i class="tag">reads</i><code>postfjord_list_campaigns</code></li>
+    <li><span>Get email campaign</span><i class="tag">reads</i><code>postfjord_get_campaign</code></li>
+    <li><span>Get email report</span><i class="tag">reads</i><code>postfjord_get_campaign_report</code></li>
+    <li><span>Draft an email</span><code>postfjord_draft_campaign</code></li>
+    <li><span>Update email draft</span><code>postfjord_update_campaign</code></li>
+    <li><span>Schedule an email</span><i class="tag out">goes out</i><code>postfjord_schedule_campaign</code></li>
+    <li><span>Unschedule or cancel an email</span><code>postfjord_cancel_campaign</code></li>
+    <li><span>List signup forms</span><i class="tag">reads</i><code>postfjord_list_signup_forms</code></li>
+    <li><span>Create a signup form (live at once)</span><i class="tag out">goes out</i><code>postfjord_create_signup_form</code></li>
+    <li><span>List email automations</span><i class="tag">reads</i><code>postfjord_list_email_automations</code></li>
+    <li><span>Create an email automation (draft)</span><code>postfjord_create_email_automation</code></li>
+    <li><span>Start, pause or resume an email automation</span><i class="tag out">goes out</i><code>postfjord_set_email_automation</code></li>
+    <li><span>List tags</span><i class="tag">reads</i><code>postfjord_list_tags</code></li>
+    <li><span>Add or update a contact</span><i class="tag out">goes out</i><code>postfjord_add_contact</code></li>
+    <li><span>Tag a contact</span><i class="tag out">goes out</i><code>postfjord_tag_contact</code></li>
+  </ul>
+  <h3>Landing pages</h3>
+  <ul>
+    <li><span>List landing pages</span><i class="tag">reads</i><code>postfjord_list_pages</code></li>
+    <li><span>Get landing page</span><i class="tag">reads</i><code>postfjord_get_page</code></li>
+    <li><span>Create landing page draft</span><code>postfjord_create_page</code></li>
+    <li><span>Update landing page draft</span><code>postfjord_update_page</code></li>
+    <li><span>Publish or take offline a landing page</span><i class="tag out">goes out</i><code>postfjord_publish_page</code></li>
+  </ul>
+  <h3>Flows</h3>
+  <ul>
+    <li><span>Start a Flow: plan a goal (nothing is created)</span><code>postfjord_plan_goal</code></li>
+    <li><span>Change a Flow's plan before launch</span><code>postfjord_update_goal</code></li>
+    <li><span>Read a Flow</span><i class="tag">reads</i><code>postfjord_get_goal</code></li>
+    <li><span>List Flows</span><i class="tag">reads</i><code>postfjord_list_goals</code></li>
+    <li><span>Launch a Flow (after the person approved the plan)</span><i class="tag out">goes out</i><code>postfjord_launch_goal</code></li>
+    <li><span>Stop a Flow</span><code>postfjord_cancel_goal</code></li>
+  </ul>
+  <h3>Workspace and brand</h3>
+  <ul>
+    <li><span>List workspaces</span><i class="tag">reads</i><code>postfjord_list_workspaces</code></li>
+    <li><span>All workspaces at a glance</span><i class="tag">reads</i><code>postfjord_workspaces_overview</code></li>
+    <li><span>List channels</span><i class="tag">reads</i><code>postfjord_list_channels</code></li>
+    <li><span>Get brand profile</span><i class="tag">reads</i><code>postfjord_get_brand_profile</code></li>
+  </ul>
+</section>
+
+<section>
+  <h2>Where it posts</h2>
+  <p class="sub">Instagram, Facebook, TikTok, LinkedIn, Pinterest, Threads, X, Bluesky, Mastodon and Tumblr, plus blog posts on WordPress, Ghost, Wix and Shopify. Comments and DMs land in one inbox, and email goes to your own contact list from Postfjord Mail.</p>
+</section>
+
+<section id="faq">
+  <h2>Questions</h2>
+  <details><summary>What does the Postfjord MCP server do?</summary><p>It connects your AI app to your Postfjord workspace. The app can then read your calendar, brand voice and numbers, write and schedule posts, answer DMs and comments, draft emails and set up automations, as far as you allow at sign in.</p></details>
+  <details><summary>Will my AI app post without asking me?</summary><p>Only if you allow it. Pick Read only or Drafts only and nothing can go out. With Schedule and publish, apps like Claude still ask before each call that reaches the public, because every tool says what it does.</p></details>
+  <details><summary>What does it cost?</summary><p>The MCP server comes with the Solo, Studio and Agency plans. See <a href="https://postfjord.com/pricing">prices</a>. The local server and the skill in this repository are MIT licensed.</p></details>
+  <details><summary>Do I need to install anything?</summary><p>No. Paste the address into your AI app and sign in. The local server is there for apps that start MCP servers themselves.</p></details>
+  <details><summary>Where is my data kept?</summary><p>Postfjord is run from Sweden and keeps its data in the EU. The server sees only the arguments of each call, never the rest of your conversation. Read the <a href="https://postfjord.com/privacy">privacy policy</a>.</p></details>
+  <details><summary>Can I build my own agent on it?</summary><p>Yes. Any agent that speaks MCP can sign in with OAuth, and anything that calls a REST API can use a key. See <a href="https://postfjord.com/developers">the developer docs</a> and <a href="https://postfjord.com/agents">the agents that work with Postfjord</a>.</p></details>
+</section>
+
+<section>
+  <div class="cta">
+    <h2>Try it on your own posts</h2>
+    <p class="sub" style="margin:10px auto 18px">Make a Postfjord account, connect your social accounts and then your AI app.</p>
+    <a class="btn main" href="https://postfjord.com">Go to postfjord.com</a><a class="btn quiet" href="https://postfjord.com/features/mcp">How MCP works in Postfjord</a>
+  </div>
+</section>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p><a href="https://postfjord.com">Postfjord</a><a href="https://postfjord.com/features/mcp">MCP</a><a href="https://postfjord.com/developers">Developers</a><a href="https://postfjord.com/help/mcp">Help</a><a href="https://postfjord.com/pricing">Pricing</a><a href="https://github.com/Rustysama/postfjord-agents">GitHub</a></p>
+    <p>MIT License. Copyright 2026 Yogakollektivet Sverige AB. Questions: <a href="mailto:hello@postfjord.com">hello@postfjord.com</a></p>
+  </div>
+</footer>
+</body>
+</html>

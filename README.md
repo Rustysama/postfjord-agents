@@ -1,6 +1,6 @@
 # Postfjord for AI agents
 
-Official agent tooling for [Postfjord](https://postfjord.com), the marketing workspace for small businesses. Agents plan, write, schedule and publish posts on Instagram, Facebook, LinkedIn, Threads, TikTok, YouTube, Pinterest, X, Bluesky, Mastodon and Google Business Profile, read analytics and the publish log, draft and schedule emails, answer the Inbox, and set up DM and email automations, landing pages and Flows.
+Official agent tooling for [Postfjord](https://postfjord.com), the marketing workspace for small businesses. Agents plan, write, schedule and publish posts on Instagram, Facebook, LinkedIn, Threads, TikTok, Pinterest, X, Bluesky, Mastodon and Tumblr, and blogs on WordPress, Ghost, Wix and Shopify, read analytics and the publish log, draft and schedule emails, answer the Inbox, and set up DM and email automations, landing pages and Flows.
 
 | Folder | What it is |
 |---|---|
